@@ -15,5 +15,10 @@ module GoogleSpeechToTextDemo
     # Application configuration can go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded after loading
     # the framework and any gems in your application.
+
+    # For Heroku deployments.
+    config.assets.initialize_on_precompile = true
+
+    config.assets.precompile += %w(recorder.js speech.js chatbox.css speech.css)
   end
 end
