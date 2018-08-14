@@ -13,6 +13,8 @@
 //= require rails-ujs
 //= require activestorage
 //= require turbolinks
+//= require reocrder
+//= require speech
 //= require_tree .
 
 
