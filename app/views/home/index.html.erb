@@ -1,0 +1,95 @@
+<div class="container">
+<h3 class=" text-center">Messaging</h3>
+<div class="messaging">
+  <div class="inbox_msg">
+    <div class="mesgs">
+      <div id="mydiv" class="msg_history">
+        <div ng-repeat="(key, value) in conv">
+          <div ng-if="value.user == 'BOT'" class="incoming_msg">
+            <div class="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"> </div>
+            <div class="received_msg">
+              <div class="received_withd_msg">
+                <p>{{value.text}}</p>
+                <span class="time_date"> 11:01 AM    |    June 9</span></div>
+            </div>
+          </div>
+          <div ng-if="value.user == 'User'" class="outgoing_msg">
+            <div class="sent_msg">
+              <p>{{value.text}}</p>
+              <span class="time_date"> 11:01 AM    |    June 9</span> </div>
+          </div>
+        </div>
+      </div>
+      <div class="type_msg">
+        <div class="input_msg_write">
+        <form ng-submit="submitForm()">
+          <input id="demo" type="text" ng-model="query" placeholder="Type a message" x-webkit-speech/>
+        </form>
+          <!-- <button class="msg_send_btn" type="button" ng-click="submitForm()"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button> -->
+        </div>
+        <div id="controls">
+          <button id="recordButton1" ng-if="button.showRecordButton" ng-click="record()">Record</button>
+          <button id="stopButton1" ng-if="button.showStopButton" ng-click="stop()">Stop</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <p class="text-center top_spac"> Design by <a target="_blank" href="https://github.com/amit-natani">Amit Natani</a></p>
+
+</div>
+</div>
+
+<!-- <form ng-submit="submitForm()">
+  <input id="demo" ng-model="query" type="text" x-webkit-speech/>
+</form> -->
+<!-- <input type="file" accept="audio/*" capture id="recorder">
+<audio id="player" controls></audio>
+<video controls></video> -->
+
+<!-- <h2> Conversation: </h2>
+<table>
+  <tr ng-repeat="c in conv">
+    <td><b> {{c}} </b>
+  </tr>
+</table> -->
+
+
+<table id="student_table" style="float:right;margin-top:-600px;">
+  <tr>
+    <th>Roll Number</th>
+    <th>Name</th>
+    <th>Marks</th>
+  </tr>
+  <tr ng-repeat="student in students">
+    <td>
+      {{student.rollNumber}}
+    </td>
+    <td>
+      {{student.name}}
+    </td>
+    <td>
+      <input type="number" ng-model="student.marks" />
+    </td>
+  </tr>
+</table>
+
+
+
+
+
+<!-- Draw the action buttons -->
+<!-- <button id="start-btn">Start recording</button>
+<button id="stop-btn" disabled>Stop recording</button>
+
+<h2>Stored Recordings</h2>
+<ul id="recordingslist"></ul> -->
+
+
+
+<div id="controls" ng-show="false">
+<button id="recordButton">Record</button>
+<button id="pauseButton" disabled>Pause</button>
+<button id="stopButton" disabled>Stop</button>
+</div>
