@@ -11,6 +11,18 @@ module GoogleSpeechToTextDemo
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 5.2
 
+    # Set Default Encoding
+    config.encoding = 'utf-8'
+
+    # Enable the asset pipeline
+    config.assets.enabled = true
+
+    config.assets.paths += %w(app/assets vendor/assets)
+
+    config.assets.precompile += %w(recorder.js speech.js chatbox.css speech.css)
+
+    config.assets.digest = true
+
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration can go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded after loading
@@ -18,7 +30,5 @@ module GoogleSpeechToTextDemo
 
     # For Heroku deployments.
     config.assets.initialize_on_precompile = true
-
-    config.assets.precompile += %w(recorder.js speech.js chatbox.css speech.css)
   end
 end
