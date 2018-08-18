@@ -15,7 +15,7 @@ class HomeController < ApplicationController
     # render json: results
 
     client = ApiAiRuby::Client.new(
-      :client_access_token => DIALOGFLOE_CLIENT_ACCESS_TOKEN
+      :client_access_token => DIALOGFLOW_CLIENT_ACCESS_TOKEN
     )
 
     if(params[:contexts].present?)
