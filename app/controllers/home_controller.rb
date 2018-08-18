@@ -14,8 +14,13 @@ class HomeController < ApplicationController
     # results = response.results
     # render json: results
 
+    puts  "=================================="
+    puts DIALOGFLOW_CLIENT_ACCESS_TOKEN
+    puts Rails.application.credentials.dialogflow_client_access_token
+    puts  "=================================="
+
     client = ApiAiRuby::Client.new(
-      :client_access_token => DIALOGFLOW_CLIENT_ACCESS_TOKEN
+      :client_access_token => Rails.application.credentials.dialogflow_client_access_token
     )
 
     if(params[:contexts].present?)
