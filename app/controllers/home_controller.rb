@@ -15,7 +15,7 @@ class HomeController < ApplicationController
     # render json: results
 
     client = ApiAiRuby::Client.new(
-      :client_access_token => '09ac3abe02704f519ebc96bf07d23be1'
+      :client_access_token => DIALOGFLOE_CLIENT_ACCESS_TOKEN
     )
 
     if(params[:contexts].present?)
@@ -36,11 +36,7 @@ class HomeController < ApplicationController
     # audio = audio.rewind
     save_path = Rails.root.join("app/assets/audio/#{audio.original_filename}")
 
-
-    puts save_path
-
     # # Open and write the file to file system.
-
     file = File.new(save_path, "w");
 
     File.open(file, 'wb') do |f|

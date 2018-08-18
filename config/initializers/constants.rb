@@ -1,2 +1,3 @@
 GOOGLE_CLOUD_PROJECT = Rails.application.credentials.google_cloud_project
 GOOGLE_CLOUD_KEYFILE_JSON = Rails.application.credentials.google_cloud_keyfile_json
+DIALOGFLOE_CLIENT_ACCESS_TOKEN = Rails.application.credentials.dialogflow_client_access_token
