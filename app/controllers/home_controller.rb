@@ -20,7 +20,7 @@ class HomeController < ApplicationController
     puts  "=================================="
 
     client = ApiAiRuby::Client.new(
-      :client_access_token => Rails.application.credentials.dialogflow_client_access_token
+      :client_access_token => "c2aaf9e884b54263b93540c3d0adb291"
     )
 
     if(params[:contexts].present?)
