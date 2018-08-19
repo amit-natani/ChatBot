@@ -17,9 +17,9 @@ module GoogleSpeechToTextDemo
     # Enable the asset pipeline
     config.assets.enabled = true
 
-    config.assets.paths += %w(app/assets vendor/assets)
+    # config.assets.paths += %w(/app/assets /vendor/assets, /public/assets)
 
-    config.assets.precompile += %w(recorder.js speech.js chatbox.css speech.css)
+    # config.assets.precompile += %w(recorder.js speech.js chatbox.css speech.css)
 
     config.assets.digest = true
 
