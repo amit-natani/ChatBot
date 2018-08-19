@@ -46,8 +46,8 @@
     }
   ])
 
-  angular.module('MetacampusBot').controller('BaseCtrl', ['$rootScope', '$scope', '$timeout', '$location', '$http', '$window', 'HomeService',
-    function ($rootScope, $scope, $timeout, $location, $http, $window, HomeService) {
+  angular.module('MetacampusBot').controller('BaseCtrl', ['$compile', '$rootScope', '$scope', '$timeout', '$location', '$http', '$window', 'HomeService', '$sce',
+    function ($compile, $rootScope, $scope, $timeout, $location, $http, $window, HomeService, $sce) {
       $scope.query = "";
 
       $scope.id = 1
@@ -130,13 +130,17 @@
       // navigator.mediaDevices.getUserMedia({ audio: true, video: false })
       // .then(handleSuccess);
 
+      function onlyUnique(value, index, self) {
+        return self.indexOf(value) === index;
+      }
+
       var setupStudentDummyData = function () {
         $scope.students = [{
           name: 'Amit Natani',
           rollNumber: 1,
           marks: null
         },{
-          name: 'Ankit Khandelwal',
+          name: 'Amit Nathani',
           rollNumber: 2,
           marks: null
         },{
@@ -180,12 +184,16 @@
           rollNumber: 12,
           marks: null
         },{
-          name: 'Abhishek Mishra',
+          name: 'Narendre Yadav',
           rollNumber: 13,
           marks: null
         },{
-          name: 'Gopal Krishna Dev',
+          name: 'Abhishek Mishra',
           rollNumber: 14,
+          marks: null
+        },{
+          name: 'Gopal Krishna Dev',
+          rollNumber: 15,
           marks: null
         }]
       }
@@ -221,48 +229,143 @@
         }
       }
 
-      var soundex = function(s) {
+      var generateNameSoundex = function (name) {
+        var arr = name.split(" ");
+        var soundexCodes = [];
+        angular.forEach(arr, function (n) {
+          soundexCodes.push(soundex(n));
+        })
+        return soundexCodes;
+      }
+
+      var soundex = function (s) {
         var a = s.toLowerCase().split(''),
-            f = a.shift(),
-            r = '',
-            codes = { a: '', e: '', i: '', o: '', u: '', b: 1, f: 1, p: 1, v: 1, c: 2, g: 2, j: 2, k: 2, q: 2, s: 2, x: 2, z: 2, d: 3, t: 3, l: 4, m: 5, n: 5, r: 6 };
-        console.log(a)
+        f = a.shift(),
+        r = '',
+        codes = {
+          a: '', e: '', i: '', o: '', u: '',
+          b: 1, f: 1, p: 1, v: 1,
+          c: 2, g: 2, j: 2, k: 2, q: 2, s: 2, x: 2, z: 2,
+          d: 3, t: 3,
+          l: 4,
+          m: 5, n: 5,
+          r: 6
+        };
+
         r = f +
-            a
-            .map(function(v, i, a) {
-                return codes[v]
-            })
-            .filter(function(v, i, a) {
-                return ((i === 0) ? v !== codes[f] : v !== a[i - 1]);
-            })
-            .join('');
+        a
+        .map(function (v, i, a) { return codes[v] })
+        .filter(function (v, i, a) {
+        return ((i === 0) ? v !== codes[f] : v !== a[i - 1]);
+        })
+        .join('');
 
         return (r + '000').slice(0, 4).toUpperCase();
       };
+
+      var generateSoundexCodesForDummyData = function () {
+        angular.forEach($scope.students, function (student) {
+          var arr = student.name.split(" ");
+          var soundexCodes = [];
+          angular.forEach(arr, function (n) {
+            soundexCodes.push(soundex(n));
+          })
+          student.soundexCodes = soundexCodes;
+        })
+      }
 
       var objDiv = document.getElementById("mydiv");
 
       $scope.submitForm = function () {
         var query = $scope.query;
-        $scope.conv[$scope.id] = {user: 'User', text: $scope.query}
+        $scope.conv[$scope.id] = {user: 'User', text: $sce.trustAsHtml("<p>"+query+"</p>")}
         // $scope.conversations.push(conv[id])
         $scope.query = "";
         $scope.id = $scope.id + 1
         objDiv.scrollTop = objDiv.scrollHeight;
         HomeService.getText({value: query, contexts: $scope.contexts}).$promise.then(function(response) {
           $scope.contexts = [];
+          $scope.contexts = $scope.contexts.concat(response.result.contexts)
+          $scope.contexts = $scope.contexts.filter(function( obj ) {
+            return obj.name !== 'soundexmatch';
+          });
           objDiv.scrollTop = objDiv.scrollHeight;
-          if(response.result.metadata.intentName == 'Enter Marks') {
+          if (response.result.metadata.intentName != 'SelectStudent_MarksSoundex') {
+            $scope.conv[$scope.id] = {user: 'BOT', text: $sce.trustAsHtml("<p>"+response.result.fulfillment.speech+"</p>")}
+            $scope.id = $scope.id + 1;
+          }
+          if (response.result.metadata.intentName == 'SelectStudent_MarksSoundex') {
+            $scope.marksParameters.st_name = $scope.nameSuggestions[response.result.fulfillment.speech - 1];
+            if($scope.marksParameters.st_name != null ) {
+              $scope.filteredStudent = $scope.students.find(function(st) {
+                return st.name.toLowerCase() == $scope.marksParameters.st_name.toLowerCase()
+              })
+              $scope.filteredStudent.marks = parseInt($scope.marksParameters.marks, 10);
+            } else {
+              $scope.conv[$scope.id] = {user: 'BOT', text: $sce.trustAsHtml("<p>Please select correct number</p>")}
+              $scope.id = $scope.id + 1;
+            }
+          } else if(response.result.metadata.intentName == 'Enter Marks') {
             $scope.marksParameters = response.result.parameters
           } else if(response.result.metadata.intentName == 'Submit Marks' || response.result.metadata.intentName == 'Submit Marks - custom') {
             $scope.marksParameters.marks = response.result.parameters.marks
             $scope.marksParameters.st_name = response.result.parameters.st_name
-            soundex($scope.marksParameters.st_name);
+            var nameSoundexCode = generateNameSoundex($scope.marksParameters.st_name);
             $scope.filteredStudent = $scope.students.find(function(st) {
               return st.name.toLowerCase() == $scope.marksParameters.st_name.toLowerCase()
             })
             if($scope.filteredStudent) {
               $scope.filteredStudent.marks = parseInt($scope.marksParameters.marks, 10)
+            } else {
+              $scope.nameSuggestions = [];
+              // angular.forEach(nameSoundexCode, function(code) {
+              //   angular.forEach($scope.students, function (student) {
+              //     if (student.soundexCodes.includes(code)) {
+              //       $scope.nameSuggestions.push(student.name);
+              //     }
+              //   })
+              // })
+              angular.forEach($scope.students, function (student) {
+                var flag = false;
+                if(student.soundexCodes.length == nameSoundexCode.length) {
+                  for (var i = 0; i < nameSoundexCode.length; i++) {
+                    if (nameSoundexCode[i] != student.soundexCodes[i]) {
+                      flag = true;
+                      break;
+                    }
+                  }
+                  if (!flag) {
+                    $scope.nameSuggestions.push(student.name);
+                  }
+                }
+              })
+              $scope.nameSuggestions = $scope.nameSuggestions.filter( onlyUnique );
+              if($scope.nameSuggestions.length == 0) {
+                $scope.conv[$scope.id] = {user: 'BOT', text: $sce.trustAsHtml("<p>I'm not able to find any exact or similar matching name with your query. Please try again with voice or text.</p>")}
+                $scope.id = $scope.id + 1
+              } else {
+                $scope.conv[$scope.id] = {user: 'BOT', text: $sce.trustAsHtml("<p>I'm not able to find the exact name you want to submit marks for. Although I have suggestion based on your query:</p>")}
+                $scope.id = $scope.id + 1;
+                // $scope.list1 = "<select ng-model='name' ng-options='name for name in nameSuggestions'></select>";
+                // var list1 = "<select ng-model='abcd' ng-options='name for name in nameSuggestions'><option value=''>Something</option></select>";
+                // $scope.list1 = "<otc-dynamic></otc-dynamic>"
+                // $compile(list1);
+                // $scope.$digest();
+                // angular.forEach($scope.nameSuggestions, function(name) {
+                //   list1 += "<option ng-change=\"selectName(\""+name+"\")\">" + name + "</option>"
+                // })
+                // list1 += "</select>";
+                var list = "<ul>"
+                var i = 1;
+                angular.forEach($scope.nameSuggestions, function (name) {
+                  list += "<li>"+ i + ". " + name + "</li>"
+                  i += 1;
+                })
+                list += "</ul>";
+                $scope.conv[$scope.id] = {user: 'BOT', text: $sce.trustAsHtml(list)}
+                $scope.id = $scope.id + 1;
+                $scope.contexts = $scope.contexts.concat({name: 'soundexmatch'})
+              }
             }
           } else if (response.result.metadata.intentName == 'DetailsCorrect-Yes') {
             // var student = {}
@@ -273,12 +376,10 @@
             //   $scope.students.push(angular.copy(student))
             // }
             setupStudentDummyData();
+            generateSoundexCodesForDummyData();
           } else if (response.result.metadata.intentName == 'UploadMarks') {
             // Upload marks data to server
           }
-          $scope.contexts = $scope.contexts.concat(response.result.contexts)
-          $scope.conv[$scope.id] = {user: 'BOT', text: response.result.fulfillment.speech}
-          $scope.id = $scope.id + 1
           // $scope.conversations.push(conv[id])
         })
       }

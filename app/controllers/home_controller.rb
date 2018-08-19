@@ -24,10 +24,6 @@ class HomeController < ApplicationController
     )
 
     if(params[:contexts].present?)
-      # contexts = []
-      # params[:contexts].each do |context|
-      #   contexts.push(context['name'])
-      # end
       response = client.text_request params[:value], :contexts => params[:contexts]
     else
       response = client.text_request params[:value]
@@ -59,6 +55,7 @@ class HomeController < ApplicationController
     audio  = { content: audio_file }
     response = speech.recognize config, audio
     results = response.results
+    File.delete(save_path) if File.exist?(save_path)
     render json: results
   end
 
