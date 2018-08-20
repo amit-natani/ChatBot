@@ -282,12 +282,14 @@
         // $scope.conversations.push(conv[id])
         $scope.query = "";
         $scope.id = $scope.id + 1
+        $('#mydiv').animate({scrollTop: $('#mydiv')[0].scrollHeight}, "slow");
         HomeService.getText({value: query, contexts: $scope.contexts}).$promise.then(function(response) {
           $scope.contexts = [];
           $scope.contexts = $scope.contexts.concat(response.result.contexts)
           $scope.contexts = $scope.contexts.filter(function( obj ) {
             return obj.name !== 'soundexmatch';
           });
+          $('#mydiv').animate({scrollTop: $('#mydiv')[0].scrollHeight}, "slow");
           if (response.result.metadata.intentName != 'SelectStudent_MarksSoundex') {
             $scope.conv[$scope.id] = {user: 'BOT', text: $sce.trustAsHtml("<p>"+response.result.fulfillment.speech+"</p>")}
             $scope.id = $scope.id + 1;
