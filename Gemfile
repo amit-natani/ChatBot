@@ -14,6 +14,8 @@ gem 'google-cloud-speech'
 
 gem 'api-ai-ruby'
 
+gem 'httparty', '~> 0.13.7'
+
 # gem 'easy_audio'
 
 # gem 'ffi-portaudio', '~> 0.1.2'

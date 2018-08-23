@@ -52,10 +52,28 @@ class HomeController < ApplicationController
       sample_rate_hertz: 44100,
       language_code:     "en-IN"
     }
+
+    request_body = {
+      "audio": {
+        "content": audio_file
+      },
+      "config": {
+        "enableAutomaticPunctuation": true,
+        "encoding": "LINEAR16",
+        "sample_rate_hertz": 44100,
+        "languageCode": "en-IN",
+        "model": "default"
+      }
+    }
+
+    # @result = HTTParty.post("https://speech.googleapis.com/v1/speech:recognize", :body => request_body)
+
+    # puts @result
+
     audio  = { content: audio_file }
+    File.delete(save_path) if File.exist?(save_path)
     response = speech.recognize config, audio
     results = response.results
-    File.delete(save_path) if File.exist?(save_path)
     render json: results
   end
 

@@ -277,19 +277,25 @@
       var objDiv = document.getElementById("mydiv");
 
       $scope.submitForm = function () {
-        var query = $scope.query;
+        var query = $scope.tempText || $scope.query;
+        $scope.tempText = "";
+        if(query == null || query == undefined || query.trim() == "") {
+          return;
+        }
         $scope.conv[$scope.id] = {user: 'User', text: $sce.trustAsHtml("<p>"+query+"</p>")}
         // $scope.conversations.push(conv[id])
         $scope.query = "";
         $scope.id = $scope.id + 1
-        $('#mydiv').animate({scrollTop: $('#mydiv')[0].scrollHeight}, "slow");
+        $('#mydiv').animate({scrollTop: $('#mydiv')[0].scrollHeight}, "fast");
         HomeService.getText({value: query, contexts: $scope.contexts}).$promise.then(function(response) {
           $scope.contexts = [];
           $scope.contexts = $scope.contexts.concat(response.result.contexts)
-          $scope.contexts = $scope.contexts.filter(function( obj ) {
-            return obj.name !== 'soundexmatch';
-          });
-          $('#mydiv').animate({scrollTop: $('#mydiv')[0].scrollHeight}, "slow");
+          if (response.result.metadata.isFallbackIntent != 'true') {
+            $scope.contexts = $scope.contexts.filter(function( obj ) {
+              return obj.name !== 'soundexmatch';
+            });
+          }
+          $('#mydiv').animate({scrollTop: $('#mydiv')[0].scrollHeight}, "fast");
           if (response.result.metadata.intentName != 'SelectStudent_MarksSoundex') {
             $scope.conv[$scope.id] = {user: 'BOT', text: $sce.trustAsHtml("<p>"+response.result.fulfillment.speech+"</p>")}
             $scope.id = $scope.id + 1;
@@ -401,9 +407,89 @@
           } else if (response.result.metadata.intentName == 'UploadMarks') {
             // Upload marks data to server
           }
+          // $timeout(function() {
+          //   startRecord()
+          // }, 3000);
           // $scope.conversations.push(conv[id])
         })
       }
+
+      var mediaConstraints = {
+          audio: true,
+          video: false
+      };
+
+      var gumStream;
+
+      $scope.tempText = "";
+
+      // function startRecord() {
+      //   $scope.button.showRecordButton = false;
+      //   $scope.button.showStopButton = false;
+      //   $scope.button.showRecording = true;
+      //   navigator.getUserMedia(mediaConstraints, onMediaSuccess, onMediaError);
+
+      //   function onMediaSuccess(stream) {
+      //     var mediaRecorder = new MediaStreamRecorder(stream);
+      //     gumStream = stream;
+      //     mediaRecorder.mimeType = 'audio/wav';
+      //     mediaRecorder.audioChannels = 1;
+      //     mediaRecorder.ondataavailable = function (blob) {
+      //       mediaRecorder.stop();
+      //       // POST/PUT "Blob" using FormData/XHR2
+      //       var blobURL = URL.createObjectURL(blob);
+      //       var filename = new Date().toISOString(); //filename to send to server without extension
+      //       var xhr=new XMLHttpRequest();
+      //       xhr.onload=function(e) {
+      //           if(this.readyState === 4) {
+      //               console.log("Server returned: ",e.target.responseText);
+      //           }
+      //       };
+      //       var fd=new FormData();
+      //       fd.append("audio_data",blob, filename);
+      //       xhr.open("POST","/home/process_audio",true);
+      //       xhr.send(fd);
+      //       xhr.onload = function(oEvent) {
+      //         if (xhr.status == 200) {
+      //           if(!JSON.parse(oEvent.target.responseText)[0]) {
+      //             $scope.button = {
+      //               showRecording: false,
+      //               showRecordButton: true,
+      //               showStopButton: false
+      //             }
+      //             $scope.$apply();
+      //             $scope.canSubmit = true;
+      //           } else {
+      //             $scope.button.showRecordButton = false;
+      //             $scope.button.showStopButton = false;
+      //             $scope.button.showRecording = true;
+      //             $scope.$apply();
+      //             var text = JSON.parse(oEvent.target.responseText)[0].alternatives[0].transcript;
+      //             $scope.tempText += " "+text;
+      //             mediaRecorder.start(2000);
+      //             $scope.canSubmit = false;
+      //           }
+      //           if($scope.canSubmit) {
+      //             if($scope.tempText != "") {
+      //               $scope.submitForm();
+      //             }
+      //           }
+      //         } else {
+      //           console.log("Error " + xhr.status + " occurred uploading your file.");
+      //         }
+      //       };
+      //     };
+      //     mediaRecorder.start(2000);
+      //   }
+      // }
+
+      // function stopRecord() {
+      //   gumStream.getAudioTracks()[0].stop();
+      // }
+
+      // function onMediaError(e) {
+      //     console.error('media error', e);
+      // }
 
 
       // // Expose globally your audio_context, the recorder instance and audio_stream
@@ -564,12 +650,15 @@
 
       $scope.button = {
         showRecordButton: true,
-        showStopButton: false
+        showStopButton: false,
+        showRecording: false
       }
 
       var gumStream; //stream from getUserMedia()
       var rec; //Recorder.js object
       var input; //MediaStreamAudioSourceNode we'll be recording
+
+      var silence_delay = 500
 
       // shim for AudioContext when it's not avb.
       var AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -588,7 +677,8 @@
         console.log("recordButton clicked");
 
         $scope.button.showRecordButton = false;
-        $scope.button.showStopButton = true;
+        $scope.button.showStopButton = false;
+        $scope.button.showRecording = true;
 
         /*
         Simple constraints object, for more advanced audio features see
@@ -613,22 +703,133 @@
         navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
           console.log("getUserMedia() success, stream created, initializing Recorder.js ...");
 
-          /* assign to gumStream for later use */
-          gumStream = stream;
+          const recorder = new MediaRecorder(stream);
+          const recognition = new webkitSpeechRecognition();
+          const synthesis = new SpeechSynthesisUtterance();
+          const handleResult = e => {
+            recognition.onresult = null;
+            console.log("Results: ",e.results);
+            const result = e.results[e.results.length - 1];
 
-          /* use the stream */
-          input = audioContext.createMediaStreamSource(stream);
+            if (result.isFinal) {
+              const [{transcript}] = result;
+              console.log(transcript);
+              synthesis.text = transcript;
+              $scope.query = transcript;
+              $scope.submitForm();
+              window.speechSynthesis.speak(synthesis);
+            }
+          }
+          synthesis.onstart = () => {
+            if (recorder.state === "inactive") {
+              recorder.start()
+            } else {
+              if (recorder.state === "paused") {
+                recorder.resume();
+              }
+            }
+          }
+          synthesis.onend = () => {
+            recorder.pause();
+            recorder.requestData();
+          }
+          recorder.ondataavailable = async(e) => {
+            if (stream.active) {
+              try {
+                const blobURL = URL.createObjectURL(e.data);
+                const request = await fetch(blobURL);
+                const ab = await request.arrayBuffer();
+                console.log(blobURL, ab);
+                recognition.onresult = handleResult;
+                // URL.revokeObjectURL(blobURL);
+              } catch (err) {
+                throw err
+              }
+            }
+          }
+          recorder.onpause = e => {
+            console.log("recorder " + recorder.state);
+          }
+          recognition.continuous = true;
+          recognition.interimResults = false;
+          recognition.maxAlternatives = 1;
+          recognition.start();
+          recognition.onend = e => {
+            console.log("recognition ended, stream.active", stream.active);
+            $scope.button.showRecordButton = true;
+            $scope.button.showStopButton = false;
+            $scope.button.showRecording = false;
+            $scope.$apply();
+
+            if (stream.active) {
+              console.log(e);
+              // the service disconnects after a period of time
+              // recognition.start();
+            }
+          }
+          recognition.onresult = handleResult;
+
+          stream.oninactive = () => {
+            console.log("stream ended");
+          }
+
+          document.getElementById("stop")
+            .onclick = () => {
+            console.log("stream.active:", stream.active);
+            if (stream && stream.active && recognition) {
+              recognition.abort();
+              recorder.stop();
+              for (let track of stream.getTracks()) {
+                track.stop();
+              }
+              console.log("stream.active:", stream.active);
+            }
+          }
+
+          // /* assign to gumStream for later use */
+          // gumStream = stream;
+
+          // /* use the stream */
+          // input = audioContext.createMediaStreamSource(stream);
+          // const analyser = audioContext.createAnalyser();
+          // input.connect(analyser);
+          // analyser.minDecibels = -60;
+          // analyser.maxDecibels = -10;
+          // const data = new Uint8Array(analyser.frequencyBinCount);
+
+          // let silence_start = performance.now();
+          // console.log(silence_start)
+          // let triggered = false;
+          // function loop(time) {
+          //   console.log("----",silence_start)
+          //   requestAnimationFrame(loop); // we'll loop every 60th of a second to check
+          //   analyser.getByteFrequencyData(data); // get current data
+          //   console.log("----------",data.some(v => v > analyser.minDecibels))
+          //   if (data.some(v => v > analyser.minDecibels)) { // if there is data above the given db limit
+          //     if(triggered){
+          //       triggered = false;
+          //       console.log('speaking');
+          //       }
+          //     silence_start = time; // set it to now
+          //     console.log("-----",silence_start)
+          //   }
+          //   if (!triggered && time - silence_start > silence_delay) {
+          //     console.log('Silence');
+          //     triggered = true;
+          //   }
+          // }
+          // loop();
 
           /*
           Create the Recorder object and configure to record mono sound (1 channel)
           Recording 2 channels  will double the file size
           */
-          rec = new Recorder(input,{numChannels:1})
+          // rec = new Recorder(input,{numChannels:1})
 
           //start the recording process
-          rec.record()
+          // rec.record()
 
-          console.log("Recording started");
+          // console.log("Recording started");
 
         }).catch(function(err) {
             //enable the record button if getUserMedia() fails

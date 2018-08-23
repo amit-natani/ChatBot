@@ -32,6 +32,7 @@
         <div id="controls">
           <button id="recordButton1" ng-if="button.showRecordButton" ng-click="record()">Record</button>
           <button id="stopButton1" ng-if="button.showStopButton" ng-click="stop()">Stop</button>
+          <button id="recordingButton" ng-if="button.showRecording">Recording</button>
         </div>
       </div>
     </div>
@@ -87,8 +88,6 @@
 
 <h2>Stored Recordings</h2>
 <ul id="recordingslist"></ul> -->
-
-
 
 <div id="controls" ng-show="false">
 <button id="recordButton">Record</button>
