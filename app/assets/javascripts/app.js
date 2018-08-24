@@ -409,7 +409,7 @@
           }
           $timeout(function() {
             startRecording()
-          }, 3000);
+          }, 2000);
           // $scope.conversations.push(conv[id])
         })
       }
