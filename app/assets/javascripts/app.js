@@ -407,9 +407,9 @@
           } else if (response.result.metadata.intentName == 'UploadMarks') {
             // Upload marks data to server
           }
-          // $timeout(function() {
-          //   startRecord()
-          // }, 3000);
+          $timeout(function() {
+            startRecording()
+          }, 3000);
           // $scope.conversations.push(conv[id])
         })
       }
@@ -716,8 +716,12 @@
               console.log(transcript);
               synthesis.text = transcript;
               $scope.query = transcript;
+              if (recorder.state === "inactive") {
+                recorder.start();
+              }
+              recorder.pause();
               $scope.submitForm();
-              window.speechSynthesis.speak(synthesis);
+              // window.speechSynthesis.speak(synthesis);
             }
           }
           synthesis.onstart = () => {
@@ -750,7 +754,7 @@
           recorder.onpause = e => {
             console.log("recorder " + recorder.state);
           }
-          recognition.continuous = true;
+          recognition.continuous = false;
           recognition.interimResults = false;
           recognition.maxAlternatives = 1;
           recognition.start();
