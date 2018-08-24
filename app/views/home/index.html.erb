@@ -24,16 +24,18 @@
       </div>
       <div class="type_msg">
         <div class="input_msg_write">
-        <form ng-submit="submitForm()">
-          <input id="demo" type="text" ng-model="query" placeholder="Type a message" x-webkit-speech/>
-        </form>
+          <form ng-submit="submitForm()">
+            <input id="demo" type="text" ng-model="query" placeholder="Type a message" x-webkit-speech/>
+          </form>
           <!-- <button class="msg_send_btn" type="button" ng-click="submitForm()"><i class="fa fa-paper-plane-o" aria-hidden="true"></i></button> -->
+          <button id="recordButton1" class="msg_send_btn notRec" style="margin-top: -5px;"ng-if="button.showRecordButton" ng-click="record()"><i class="fa fa-microphone" aria-hidden="true"></i></button>
+          <button id="recordingButton" class="msg_send_btn Rec" style="margin-top: -5px;" ng-if="button.showRecording"><i class="fa fa-microphone" aria-hidden="true"></i></button>
         </div>
-        <div id="controls">
-          <button id="recordButton1" ng-if="button.showRecordButton" ng-click="record()">Record</button>
+        <!-- <div id="controls">
+          <button id="recordButton1" class="notRec" ng-if="button.showRecordButton" ng-click="record()">Record</button>
           <button id="stopButton1" ng-if="button.showStopButton" ng-click="stop()">Stop</button>
-          <button id="recordingButton" ng-if="button.showRecording">Recording</button>
-        </div>
+          <button id="recordingButton" class="Rec" ng-if="button.showRecording">Recording</button>
+        </div> -->
       </div>
     </div>
   </div>
