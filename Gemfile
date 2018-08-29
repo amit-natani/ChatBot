@@ -16,6 +16,8 @@ gem 'api-ai-ruby'
 
 gem 'httparty', '~> 0.13.7'
 
+gem 'rack-cors', require: 'rack/cors'
+
 # gem 'easy_audio'
 
 # gem 'ffi-portaudio', '~> 0.1.2'
